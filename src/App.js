@@ -3,6 +3,7 @@ import "./App.css";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
 import Lifecycle from "./Lifecycle";
+import Optimaizetest from "./optimaizetest";
 // const dumyList = [
 //   {
 //     id: 1,
