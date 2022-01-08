@@ -1,9 +1,10 @@
+import react from "react";
 import React, {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
-  useState,
 } from "react";
 import "./App.css";
 import DiaryEditor from "./DiaryEditor";
@@ -31,8 +32,35 @@ import DiaryList from "./DiaryList";
 //     creadet_date: new Date().getTime(),
 //   },
 // ];
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INIT": {
+      return action.data;
+    }
+    case "CREATE": {
+      const created_date = new Date().getTime();
+      const newItem = {
+        ...action.data,
+        created_date,
+      };
+      return [newItem, ...state];
+    }
+    case "REMOVE": {
+      return state.filter((it) => it.id !== action.targetId);
+    }
+    case "EDIT": {
+      return state.map((it) =>
+        it.id === action.targetId ? { ...it, content: action.newContent } : it
+      );
+    }
+    default:
+      return state;
+  }
+};
+
 const App = () => {
-  const [data, setData] = useState([]);
+  // const [data, setData] = useState([]);
+  const [data, dispatch] = useReducer(reducer, []);
 
   const dataId = useRef(0);
   const getData = async () => {
@@ -49,36 +77,27 @@ const App = () => {
         id: dataId.current++,
       };
     });
-    setData(initData);
+    dispatch({ type: "INIT", data: initData });
   };
   useEffect(() => {
     getData();
   }, []);
   const onCreate = useCallback((author, content, emotion) => {
-    const creadet_date = new Date().getTime();
-    const newItem = {
-      author,
-      content,
-      emotion,
-      creadet_date,
-      id: dataId.current,
-    };
+    dispatch({
+      type: "CREATE",
+      data: { author, content, emotion, id: dataId.current },
+    });
+
     dataId.current += 1;
-    setData((data) => [newItem, ...data]);
   }, []);
 
   const onRemove = useCallback((targetId) => {
-    console.log(`${targetId} 가 삭제 돼었습니다.`);
-    setData((data) => data.filter((it) => it.id !== targetId));
+    dispatch({ type: "REMOVE", targetId });
   }, []);
 
   const onEdit = useCallback((targetId, newContent) => {
-    setData((data)=>
-      data.map((it) =>
-        it.id === targetId ? { ...it, content: newContent } : it
-      )
-    );
-  },[]);
+    dispatch({ type: "EDIT", targetId, newContent });
+  }, []);
   const getDairyAnalysis = useMemo(() => {
     console.log("일기 분석 시작");
 
